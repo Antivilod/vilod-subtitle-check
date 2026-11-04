@@ -22,7 +22,7 @@ be flagged; findings require interpretation. No automatic fixes are made.
 
 ## Requirements and status
 
-Python 3.10+, standard library only. Initial preview 0.1.0. No installation
+Python 3.10+, standard library only. Source preview 0.2.0. No installation
 of external packages is required. Linux tests passed; Windows is not yet verified.
 No network calls, telemetry or accounts. Input content is not anonymized.
 Review reports before sharing. No EXE or graphical interface is included.
@@ -43,3 +43,13 @@ Use GitHub Code > Download ZIP, extract it, and run the commands above from the 
 ## Скачать и запустить
 
 Нажмите Code > Download ZIP, распакуйте архив и откройте терминал в папке программы. Нужен Python 3.10 или новее. Команды выше запускаются без установки сторонних библиотек. Это исходники, не EXE-установщик.
+
+## Optional caption limits in 0.2.0
+
+```sh
+python subtitle_check.py --max-line-length 42 --max-cps 20 example.srt
+```
+
+Limits are disabled by default. Exceeding a limit adds an issue and returns exit code 1. The numbers above are examples, not a subtitle standard. Line length counts all Unicode code points, including spaces and markup. Reading speed sums trimmed caption line lengths (without line separators), divided by duration. Markup is not stripped. No caption text is printed. Nine unit tests passed on Linux.
+
+Необязательные проверки длины строки и скорости чтения включаются флагами. Порог выбирает пользователь; это подсказки для ручной проверки, а не оценка качества перевода.
