@@ -4,7 +4,7 @@ import json
 import re
 from pathlib import Path
 
-VERSION = '0.2.0'
+VERSION = '0.3.0'
 TIME = re.compile(r'^(\d{2,}):([0-5]\d):([0-5]\d),(\d{3}) --> (\d{2,}):([0-5]\d):([0-5]\d),(\d{3})$')
 
 
@@ -13,7 +13,9 @@ def milliseconds(parts):
     return ((h*60+m)*60+s)*1000+ms
 
 
-def check(text, max_line_length=None, max_cps=None):
+def check(text, max_line_length=None, max_cps=None, min_duration_ms=None):
+    if min_duration_ms is not None and min_duration_ms <= 0:
+        raise ValueError('min_duration_ms must be positive')
     if max_line_length is not None and max_line_length <= 0:
         raise ValueError('max_line_length must be positive')
     if max_cps is not None and (not 0 < max_cps < float('inf')):
@@ -37,6 +39,8 @@ def check(text, max_line_length=None, max_cps=None):
             continue
         start, end = milliseconds(match.groups()[:4]), milliseconds(match.groups()[4:])
         if end<=start: issues.append({'block':number,'type':'nonpositive_duration'})
+        if min_duration_ms is not None and 0 < end - start < min_duration_ms:
+            issues.append({'block':number,'type':'duration_too_short','milliseconds':end-start})
         if start<previous_start: issues.append({'block':number,'type':'out_of_order'})
         if start<high_end: issues.append({'block':number,'type':'overlap'})
         if not any(line.strip() for line in lines[2:]):
@@ -62,12 +66,15 @@ def main(argv=None):
     p.add_argument('--version', action='version', version=VERSION)
     p.add_argument('--max-line-length', type=int, help='Optional positive character limit per caption line')
     p.add_argument('--max-cps', type=float, help='Optional finite positive characters-per-second limit')
+    p.add_argument('--min-duration-ms', type=int, help='Flag positive durations below this threshold')
     p.add_argument('file'); a=p.parse_args(argv)
     if a.max_line_length is not None and a.max_line_length <= 0:
         p.error('--max-line-length must be positive')
     if a.max_cps is not None and not 0 < a.max_cps < float('inf'):
         p.error('--max-cps must be finite and positive')
-    try: result=check(Path(a.file).read_text(encoding='utf-8-sig'), a.max_line_length, a.max_cps)
+    if a.min_duration_ms is not None and a.min_duration_ms <= 0:
+        p.error('--min-duration-ms must be positive')
+    try: result=check(Path(a.file).read_text(encoding='utf-8-sig'), a.max_line_length, a.max_cps, a.min_duration_ms)
     except (ValueError,OSError): p.exit(2,'Cannot read UTF-8 subtitle file.\n')
     print(json.dumps(result,ensure_ascii=False,indent=2))
     return 0 if result['ok'] else 1

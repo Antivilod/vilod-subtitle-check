@@ -53,3 +53,9 @@ python subtitle_check.py --max-line-length 42 --max-cps 20 example.srt
 Limits are disabled by default. Exceeding a limit adds an issue and returns exit code 1. The numbers above are examples, not a subtitle standard. Line length counts all Unicode code points, including spaces and markup. Reading speed sums trimmed caption line lengths (without line separators), divided by duration. Markup is not stripped. No caption text is printed. Nine unit tests passed on Linux.
 
 Необязательные проверки длины строки и скорости чтения включаются флагами. Порог выбирает пользователь; это подсказки для ручной проверки, а не оценка качества перевода.
+
+## New in 0.3.0
+
+Optional minimum caption duration flags captions that disappear too quickly, independently of reading speed.
+
+`python subtitle_check.py example.srt --min-duration-ms 700`
